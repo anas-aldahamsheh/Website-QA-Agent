@@ -1,0 +1,35 @@
+{
+  "name": "web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --hostname 127.0.0.1",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@sentinelqa/auth": "workspace:*",
+    "@sentinelqa/contracts": "workspace:*",
+    "@sentinelqa/database": "workspace:*",
+    "@sentinelqa/logger": "workspace:*",
+    "@sentinelqa/projects": "workspace:*",
+    "@sentinelqa/queue": "workspace:*",
+    "@sentinelqa/security": "workspace:*",
+    "lucide-react": "^0.577.0",
+    "next": "^15.5.27",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5.4.5"
+  }
+}

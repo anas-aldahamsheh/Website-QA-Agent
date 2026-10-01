@@ -1,0 +1,26 @@
+{
+  "name": "scheduler",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/index.tsx",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@sentinelqa/queue": "workspace:*",
+    "@sentinelqa/logger": "workspace:*",
+    "@sentinelqa/database": "workspace:*",
+    "@sentinelqa/contracts": "workspace:*",
+    "bullmq": "^5.8.3",
+    "dotenv": "^16.4.5",
+    "ioredis": "^5.4.1",
+    "pino": "^9.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "tsx": "^4.10.5",
+    "typescript": "^5.4.5"
+  }
+}

@@ -1,0 +1,28 @@
+{
+  "name": "worker",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/index.tsx",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@sentinelqa/database": "workspace:*",
+    "@sentinelqa/queue": "workspace:*",
+    "@sentinelqa/test-engine": "workspace:*",
+    "@sentinelqa/contracts": "workspace:*",
+    "@sentinelqa/logger": "workspace:*",
+    "bullmq": "^5.8.3",
+    "dotenv": "^16.4.5",
+    "ioredis": "^5.4.1",
+    "playwright": "^1.44.0",
+    "pino": "^9.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "tsx": "^4.10.5",
+    "typescript": "^5.4.5"
+  }
+}

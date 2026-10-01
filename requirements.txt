@@ -1,0 +1,22 @@
+# Website QA Agent is a Node.js / TypeScript monorepo — Python is NOT required.
+#
+# This file only documents the runtime requirements and is safe to run with:
+#   pip install -r requirements.txt   (installs nothing)
+#
+# Required:
+#   - Node.js 20+ (Node 22 LTS recommended, see .nvmrc)
+#   - pnpm 11.9+  (corepack enable  or  npm install -g pnpm)
+#
+# Optional:
+#   - Redis, for the BullMQ queue mode:  docker compose up -d redis
+#     (leave REDIS_URL unset to use the built-in local polling worker)
+#
+# The database is SQLite through Prisma — no database server is needed.
+#
+# Install and run:
+#   pnpm install
+#   cp .env.example .env
+#   pnpm run db:generate
+#   pnpm run db:migrate
+#   pnpm --filter web dev        # dashboard on http://localhost:3000
+#   pnpm --filter worker dev     # scan worker (separate terminal)

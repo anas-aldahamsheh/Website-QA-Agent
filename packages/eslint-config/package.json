@@ -1,0 +1,10 @@
+{
+  "name": "@sentinelqa/eslint-config",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.js",
+  "dependencies": {
+    "eslint-config-next": "^15.5.27",
+    "eslint-plugin-react": "^7.34.1"
+  }
+}

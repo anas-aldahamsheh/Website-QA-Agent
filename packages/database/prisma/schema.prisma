@@ -1,0 +1,363 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// User Models
+model User {
+  id            String       @id @default(uuid())
+  email         String       @unique
+  name          String?
+  emailVerified Boolean      @default(false)
+  image         String?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  sessions      Session[]
+  accounts      Account[]
+  memberships   Membership[]
+  assignments   IssueAssignment[]
+  auditLogs     AuditLog[]
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Account {
+  id                    String    @id @default(uuid())
+  userId                String
+  accountId             String
+  providerId            String
+  accessToken           String?
+  refreshToken          String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  idToken               String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Multi-tenancy
+model Organization {
+  id          String       @id @default(uuid())
+  name        String
+  slug        String       @unique
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+  memberships Membership[]
+  invitations Invitation[]
+  projects    Project[]
+  testRuns    TestRun[]
+}
+
+model Membership {
+  id             String       @id @default(uuid())
+  organizationId String
+  userId         String
+  role           String       // OWNER, ADMIN, QA_ENGINEER, DEVELOPER, VIEWER, BILLING
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Invitation {
+  id             String       @id @default(uuid())
+  organizationId String
+  email          String
+  role           String
+  token          String       @unique
+  expiresAt      DateTime
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+// Projects & Environments
+model Project {
+  id             String       @id @default(uuid())
+  organizationId String
+  name           String
+  domain         String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  environments   Environment[]
+  credentials    Credential[]
+  testProfiles   TestProfile[]
+  testRuns       TestRun[]
+  issues         Issue[]
+}
+
+model Environment {
+  id          String   @id @default(uuid())
+  projectId   String
+  name        String   // PRODUCTION, STAGING, CUSTOM
+  targetUrl   String
+  createdAt   DateTime @default(now())
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  testRuns    TestRun[]
+}
+
+model Credential {
+  id             String   @id @default(uuid())
+  projectId      String
+  type           String   // BASIC_AUTH, FORM_LOGIN, API_TOKEN
+  key            String
+  encryptedValue String
+  createdAt      DateTime @default(now())
+  project        Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+// Test Profiles
+model TestProfile {
+  id        String   @id @default(uuid())
+  projectId String
+  name      String
+  config    String   // JSON serialized configuration
+  createdAt DateTime @default(now())
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  testRuns  TestRun[]
+}
+
+// Test Runs & State Machine
+model TestRun {
+  id             String       @id @default(uuid())
+  organizationId String
+  projectId      String
+  environmentId  String
+  testProfileId  String
+  status         String       // DRAFT, QUEUED, PROVISIONING, DISCOVERING, PLANNING, EXECUTING, ANALYZING, COMPLETED, PARTIALLY_COMPLETED, FAILED, CANCELED, TIMED_OUT
+  scanMode       String       @default("STANDARD")
+  scopeConfig    String?
+  startedAt      DateTime?
+  completedAt    DateTime?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  project        Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  environment    Environment  @relation(fields: [environmentId], references: [id], onDelete: Cascade)
+  testProfile    TestProfile  @relation(fields: [testProfileId], references: [id], onDelete: Cascade)
+  caseRuns       TestCaseRun[]
+  events         RunEvent[]
+  artifacts      Artifact[]
+  metrics        RunMetric[]
+  crawledPages   CrawledPage[]
+  robotsTxt      RobotsTxtCache[]
+  sitemapEntries SitemapEntry[]
+}
+
+model TestCaseRun {
+  id         String   @id @default(uuid())
+  testRunId  String
+  name       String
+  status     String   // PASSED, FAILED, SKIPPED
+  durationMs Int
+  createdAt  DateTime @default(now())
+  testRun    TestRun  @relation(fields: [testRunId], references: [id], onDelete: Cascade)
+  stepRuns   StepRun[]
+}
+
+model StepRun {
+  id            String      @id @default(uuid())
+  caseRunId     String
+  action        String      // navigate, click, fill, assertVisible etc
+  target        String?
+  status        String      // PASSED, FAILED
+  durationMs    Int
+  screenshotKey String?
+  errorMessage  String?
+  createdAt     DateTime    @default(now())
+  caseRun       TestCaseRun @relation(fields: [caseRunId], references: [id], onDelete: Cascade)
+}
+
+model RunEvent {
+  id        String   @id @default(uuid())
+  testRunId String
+  type      String   // LOG, WARNING, ERROR, STATE_CHANGE
+  message   String
+  metadata  String?
+  createdAt DateTime @default(now())
+  testRun   TestRun  @relation(fields: [testRunId], references: [id], onDelete: Cascade)
+}
+
+model RunMetric {
+  id        String   @id @default(uuid())
+  testRunId String
+  name      String   // LighthouseScore, LCP, TBT, CLS, PageLoadTime
+  value     Float
+  createdAt DateTime @default(now())
+  testRun   TestRun  @relation(fields: [testRunId], references: [id], onDelete: Cascade)
+}
+
+// Issues & Triage
+model Issue {
+  id             String            @id @default(uuid())
+  projectId      String
+  category       String            // FUNCTIONAL, VISUAL, ACCESS_VIOLATION, PERFORMANCE_DROP, CONSOLE_ERROR, SECURITY_ALERT
+  severity       String            // CRITICAL, HIGH, MEDIUM, LOW
+  status         String            // OPEN, ASSIGNED, RESOLVED, IGNORED
+  title          String
+  description    String
+  suggestedFix   String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  project        Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  occurrences    IssueOccurrence[]
+  assignments    IssueAssignment[]
+}
+
+model IssueOccurrence {
+  id           String   @id @default(uuid())
+  issueId      String
+  testRunId    String
+  browser      String
+  device       String
+  evidencePath String?  // Trace or screenshot storage key
+  createdAt    DateTime @default(now())
+  issue        Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+}
+
+model IssueAssignment {
+  id        String   @id @default(uuid())
+  issueId   String
+  userId    String
+  createdAt DateTime @default(now())
+  issue     Issue    @relation(fields: [issueId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// Artifacts
+model Artifact {
+  id             String   @id @default(uuid())
+  testRunId      String
+  type           String   // SCREENSHOT, VIDEO, TRACE, LIGHTHOUSE_REPORT, HAR
+  storageKey     String
+  size           Int
+  mimeType       String
+  checksum       String
+  retentionUntil DateTime
+  createdAt      DateTime @default(now())
+  testRun        TestRun  @relation(fields: [testRunId], references: [id], onDelete: Cascade)
+}
+
+// Audit & logs
+model AuditLog {
+  id             String   @id @default(uuid())
+  userId         String?
+  action         String
+  entityType     String
+  entityId       String?
+  details        String?
+  ipAddress      String?
+  createdAt      DateTime @default(now())
+  user           User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+}
+
+// ─────────────────────────────────────────────
+// PHASE-20 / 21  — Site Inventory & Link Graph
+// ─────────────────────────────────────────────
+
+// One record per normalized URL discovered during a run (INV-001)
+model CrawledPage {
+  id                 String      @id @default(uuid())
+  testRunId          String
+  normalizedUrl      String
+  originalUrl        String
+  discoverySource    String      // ANCHOR, NAVIGATION_MENU, FOOTER, BREADCRUMB, PAGINATION, SITEMAP, ROBOTS_TXT, CANONICAL_TAG, ALTERNATE_HREFLANG, STRUCTURED_DATA, IFRAME, RSS_FEED, MANIFEST, SEED, REDIRECT
+  httpStatus         Int?
+  finalUrl           String?     // URL after redirects
+  pageTitle          String?
+  contentType        String?
+  language           String?
+  canonicalUrl       String?
+  isIndexable        Boolean     @default(true)
+  crawlDepth         Int         @default(0)
+  inboundLinkCount   Int         @default(0)
+  outboundLinkCount  Int         @default(0)
+  hasScreenshot      Boolean     @default(false)
+  hasTrace           Boolean     @default(false)
+  templateId         String?     // Template cluster assignment
+  requiresAuth       Boolean     @default(false)
+  businessCriticality String     @default("NORMAL") // CRITICAL, HIGH, NORMAL, LOW
+  healthScore        Float?
+  crawlDecision      String      @default("VISITED") // VISITED, SKIPPED, BLOCKED, FAILED, QUEUED
+  skipReason         String?
+  crawlDurationMs    Int?
+  firstDiscoveredAt  DateTime    @default(now())
+  lastCheckedAt      DateTime    @default(now())
+  testRun            TestRun     @relation(fields: [testRunId], references: [id], onDelete: Cascade)
+  outboundLinks      CrawlLink[] @relation("SourcePage")
+  inboundLinks       CrawlLink[] @relation("DestinationPage")
+
+  @@index([testRunId])
+  @@index([normalizedUrl])
+}
+
+// Directed link edge for the site graph (GRAPH-001)
+model CrawlLink {
+  id              String      @id @default(uuid())
+  testRunId       String
+  sourcePageId    String
+  destPageId      String?
+  destUrl         String      // Raw href value
+  anchorText      String?
+  elementContext  String?     // nav, footer, breadcrumb, body, etc.
+  isInternal      Boolean     @default(true)
+  isBroken        Boolean     @default(false)
+  httpStatus      Int?
+  createdAt       DateTime    @default(now())
+  sourcePage      CrawledPage @relation("SourcePage", fields: [sourcePageId], references: [id], onDelete: Cascade)
+  destPage        CrawledPage? @relation("DestinationPage", fields: [destPageId], references: [id], onDelete: SetNull)
+
+  @@index([testRunId])
+  @@index([sourcePageId])
+}
+
+// Robots.txt cache (CRAWL-005)
+model RobotsTxtCache {
+  id          String   @id @default(uuid())
+  testRunId   String
+  domain      String
+  rawContent  String
+  parsedRules String   // JSON serialized rules
+  sitemapUrls String   // JSON serialized URLs
+  fetchedAt   DateTime @default(now())
+  expiresAt   DateTime
+  testRun     TestRun  @relation(fields: [testRunId], references: [id], onDelete: Cascade)
+
+  @@index([testRunId])
+}
+
+// Sitemap entries discovered and validated (CRAWL-005)
+model SitemapEntry {
+  id              String   @id @default(uuid())
+  testRunId       String
+  sitemapUrl      String
+  pageUrl         String
+  lastModified    DateTime?
+  changeFrequency String?
+  priority        Float?
+  isReachable     Boolean  @default(true)
+  httpStatus      Int?
+  blockedByRobots Boolean  @default(false)
+  foundViaLinks   Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  testRun         TestRun  @relation(fields: [testRunId], references: [id], onDelete: Cascade)
+
+  @@index([testRunId])
+}

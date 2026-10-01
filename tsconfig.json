@@ -1,0 +1,11 @@
+{
+  "extends": "./packages/tsconfig/node.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@sentinelqa/database": ["./packages/database/src"],
+      "@sentinelqa/*": ["./packages/*/src"]
+    }
+  },
+  "exclude": ["node_modules", "**/dist", ".next"]
+}

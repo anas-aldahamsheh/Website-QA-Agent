@@ -1,0 +1,19 @@
+{
+  "name": "@sentinelqa/queue",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@sentinelqa/contracts": "workspace:*",
+    "@sentinelqa/logger": "workspace:*",
+    "bullmq": "^5.8.3",
+    "ioredis": "^5.4.1"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}

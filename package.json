@@ -1,0 +1,25 @@
+{
+  "name": "sentinelqa",
+  "private": true,
+  "packageManager": "pnpm@11.9.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=8.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "test:unit": "turbo run test:unit",
+    "test:integration": "turbo run test:integration",
+    "db:migrate": "pnpm --filter database db:migrate",
+    "db:generate": "pnpm --filter database db:generate"
+  },
+  "devDependencies": {
+    "turbo": "^2.9.14",
+    "typescript": "^5.4.5"
+  }
+}
+

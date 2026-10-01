@@ -1,0 +1,21 @@
+{
+  "name": "@sentinelqa/database",
+  "version": "0.1.0",
+  "private": true,
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "db:generate": "prisma generate",
+    "db:migrate": "prisma migrate dev",
+    "db:push": "prisma db push",
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.14.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "prisma": "^5.14.0",
+    "typescript": "^5.4.5"
+  }
+}
