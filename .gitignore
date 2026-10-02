@@ -116,8 +116,6 @@ temp/
 *.db
 
 # Local editor and automation state
-.codex/
-.playwright-mcp/
 results-workspace.png
 
 # Playwright Test
@@ -135,7 +133,7 @@ next-env.d.ts
 # Editor settings
 .vscode/
 
-# Internal notes, templates and AI-assistant files (only README.md is published)
+# Internal notes and templates (only README.md is published)
 *.md
 !/README.md
 CODEOWNERS
