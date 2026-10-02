@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import { Activity, AlertTriangle, CheckCircle, Clock, Loader2, Radio, RefreshCw } from 'lucide-react';
+import { Activity, AlertTriangle, CheckCircle, Clock, Loader2, MinusCircle, Radio, RefreshCw } from 'lucide-react';
 import type { LiveRunProgressDto, LiveCheckStatus } from '@/server/queries/run-progress';
 
 type LiveRunProgressPanelProps = {
@@ -12,7 +12,8 @@ const CHECK_STATUS_CLASS: Record<LiveCheckStatus, string> = {
   WAITING: 'bg-secondary border-border text-muted-foreground',
   RUNNING: 'bg-primary/10 border-primary/40 text-primary',
   DONE: 'bg-emerald-500/10 border-emerald-500/40 text-emerald-500',
-  ATTENTION: 'bg-amber-500/10 border-amber-500/40 text-amber-600'
+  ATTENTION: 'bg-amber-500/10 border-amber-500/40 text-amber-600',
+  NOT_RUN: 'bg-secondary/40 border-dashed border-border text-muted-foreground opacity-70'
 };
 
 export function LiveRunProgressPanel({ initialProgress }: LiveRunProgressPanelProps) {
@@ -58,6 +59,8 @@ export function LiveRunProgressPanel({ initialProgress }: LiveRunProgressPanelPr
   const runningChecks = progress.checks.filter((check) => check.status === 'RUNNING').length;
   const doneChecks = progress.checks.filter((check) => check.status === 'DONE').length;
   const attentionChecks = progress.checks.filter((check) => check.status === 'ATTENTION').length;
+  const notRunChecks = progress.checks.filter((check) => check.status === 'NOT_RUN').length;
+  const runnableChecks = progress.checks.length - notRunChecks;
 
   return (
     <section className="rounded-md border border-border bg-card p-6">
@@ -79,7 +82,7 @@ export function LiveRunProgressPanel({ initialProgress }: LiveRunProgressPanelPr
           <Metric label="Status" value={progress.status} tone="blue" />
           <Metric label="Elapsed" value={elapsed} tone="neutral" />
           <Metric label="ETA" value={estimatedRemaining ?? 'calculating'} tone="emerald" />
-          <Metric label="Checks" value={`${doneChecks}/${progress.checks.length || 0}`} tone={attentionChecks > 0 ? 'amber' : 'neutral'} />
+          <Metric label="Checks" value={`${doneChecks}/${runnableChecks}`} tone={attentionChecks > 0 ? 'amber' : 'neutral'} />
         </div>
       </div>
 
@@ -121,7 +124,7 @@ export function LiveRunProgressPanel({ initialProgress }: LiveRunProgressPanelPr
         <div className="flex items-center justify-between mb-2">
           <div className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Feature Checks</div>
           <div className="text-[11px] text-muted-foreground">
-            Running {runningChecks} • Attention {attentionChecks}
+            Running {runningChecks} • Attention {attentionChecks}{notRunChecks > 0 ? ` • Not run ${notRunChecks}` : ''}
           </div>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-2">
@@ -133,6 +136,7 @@ export function LiveRunProgressPanel({ initialProgress }: LiveRunProgressPanelPr
                 {check.status === 'DONE' && <CheckCircle className="w-3.5 h-3.5" />}
                 {check.status === 'ATTENTION' && <AlertTriangle className="w-3.5 h-3.5" />}
                 {check.status === 'WAITING' && <Clock className="w-3.5 h-3.5" />}
+                {check.status === 'NOT_RUN' && <MinusCircle className="w-3.5 h-3.5" />}
               </div>
               <div className="text-[10px] opacity-80 mt-1">{check.section}</div>
               <div className="text-[10px] opacity-80 mt-1">{check.detail}</div>
