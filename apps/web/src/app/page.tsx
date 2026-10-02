@@ -43,7 +43,7 @@ export default async function DashboardPage({ searchParams }: { searchParams?: P
 
       <ScanLauncherPanel copy={copy} profile={selectedProfile ? readProfileConfig(selectedProfile.config) : undefined} />
 
-      <LiveRunProgressPanel initialProgress={data.liveRunProgress} />
+      <LiveRunProgressPanel initialProgress={data.liveRunProgress} pinnedRunId={query.runId} />
 
       <RecentWorkPanel runs={data.runs} profiles={data.profiles} searchParams={query} copy={copy} />
     </DashboardShell>

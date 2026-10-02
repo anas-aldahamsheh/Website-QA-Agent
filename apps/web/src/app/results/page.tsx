@@ -60,7 +60,7 @@ export default async function ResultsPage({ searchParams }: { searchParams?: Pro
                 />
               ) : null}
 
-              {activeSection === 'live' ? <LiveRunProgressPanel initialProgress={data.liveRunProgress} /> : null}
+              {activeSection === 'live' ? <LiveRunProgressPanel initialProgress={data.liveRunProgress} pinnedRunId={query.runId} /> : null}
               {activeSection === 'logs' ? <RunLogsPanel runs={data.selectedRun ? [data.selectedRun] : data.runs} events={data.runEvents} copy={copy} /> : null}
               {activeSection === 'issues' ? <IssuesPanel issues={data.issues} searchParams={query} copy={copy} /> : null}
               {activeSection === 'metrics' ? <MetricsPanel metrics={data.metrics} auditLogs={data.auditLogs} copy={copy} /> : null}

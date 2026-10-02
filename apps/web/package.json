@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test:unit": "tsx src/server/queries/check-progress.test.ts"
+    "test:unit": "tsx src/server/queries/check-progress.test.ts && tsx src/app/progress-request.test.ts"
   },
   "dependencies": {
     "@sentinelqa/auth": "workspace:*",

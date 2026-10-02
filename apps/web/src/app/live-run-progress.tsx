@@ -3,9 +3,11 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Activity, AlertTriangle, CheckCircle, Clock, Loader2, MinusCircle, Radio, RefreshCw } from 'lucide-react';
 import type { LiveRunProgressDto, LiveCheckStatus } from '@/server/queries/run-progress';
+import { progressRequestPath } from './progress-request';
 
 type LiveRunProgressPanelProps = {
   initialProgress: LiveRunProgressDto;
+  pinnedRunId?: string | undefined;
 };
 
 const CHECK_STATUS_CLASS: Record<LiveCheckStatus, string> = {
@@ -16,17 +18,23 @@ const CHECK_STATUS_CLASS: Record<LiveCheckStatus, string> = {
   NOT_RUN: 'bg-secondary/40 border-dashed border-border text-muted-foreground opacity-70'
 };
 
-export function LiveRunProgressPanel({ initialProgress }: LiveRunProgressPanelProps) {
+export function LiveRunProgressPanel({ initialProgress, pinnedRunId }: LiveRunProgressPanelProps) {
   const [progress, setProgress] = useState(initialProgress);
   const [isPolling, setIsPolling] = useState(true);
   const [pollError, setPollError] = useState<string | null>(null);
+  const [initialRunId, setInitialRunId] = useState(initialProgress.runId);
+
+  // A server refresh after starting a scan brings a different run; show it right away.
+  if (initialProgress.runId !== initialRunId) {
+    setInitialRunId(initialProgress.runId);
+    setProgress(initialProgress);
+  }
 
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
       try {
-        const params = progress.runId ? `?runId=${encodeURIComponent(progress.runId)}` : '';
-        const response = await fetch(`/api/run-progress${params}`, { cache: 'no-store' });
+        const response = await fetch(progressRequestPath(pinnedRunId), { cache: 'no-store' });
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}`);
         }
@@ -48,7 +56,7 @@ export function LiveRunProgressPanel({ initialProgress }: LiveRunProgressPanelPr
       cancelled = true;
       window.clearInterval(interval);
     };
-  }, [progress.runId]);
+  }, [pinnedRunId]);
 
   useEffect(() => {
     setIsPolling(!['COMPLETED', 'PARTIALLY_COMPLETED', 'FAILED', 'CANCELED', 'TIMED_OUT', 'NO_RUN'].includes(progress.status));
