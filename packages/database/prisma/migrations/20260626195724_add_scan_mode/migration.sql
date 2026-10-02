@@ -1,2 +1,0 @@
--- AlterTable
-ALTER TABLE "TestRun" ADD COLUMN     "scanMode" TEXT NOT NULL DEFAULT 'STANDARD';

@@ -8,7 +8,8 @@
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
-    "build": "tsc"
+    "build": "tsc",
+    "test:unit": "node --test prisma/migrations.test.mjs"
   },
   "dependencies": {
     "@prisma/client": "^5.14.0"
