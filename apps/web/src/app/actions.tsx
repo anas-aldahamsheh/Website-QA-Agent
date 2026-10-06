@@ -1,14 +1,16 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
 import { prisma } from '@sentinelqa/database';
 import { pushTestRunJob, getTestRunsQueue, createRedisConnection } from '@sentinelqa/queue';
-import { validateTargetUrl } from '@sentinelqa/security';
+import { isPublicMode, validateTargetUrl } from '@sentinelqa/security';
 import { fork } from 'node:child_process';
 import path from 'node:path';
 import { existsSync } from 'node:fs';
 import { logger } from '@sentinelqa/logger';
-import { CheckIdSchema, IMPLEMENTED_CHECK_IDS, IssueFeedbackStatusSchema, ScanModeSchema, ScopeConfigSchema } from '@sentinelqa/contracts';
+import { CheckIdSchema, IMPLEMENTED_CHECK_IDS, IssueFeedbackStatusSchema, ScanModeSchema, ScopeConfigSchema, limitScopeForPublic } from '@sentinelqa/contracts';
+import { countLiveRuns } from '@/server/queries/run-progress';
 
 function serializeJson(data: unknown): string {
   return typeof data === 'string' ? data : JSON.stringify(data);
@@ -31,6 +33,20 @@ function runDirectScan(runId: string): boolean {
   } catch (err) {
     logger.error({ err, runId }, 'Failed to spawn background scan process');
     return false;
+  }
+}
+
+// The public demo runs one scan at a time on its owner's machine; a visitor who comes while one
+// is running goes back to the Run Center with a note to try again shortly.
+async function sendBackWhenPublicDemoIsBusy() {
+  if (isPublicMode() && (await countLiveRuns()) > 0) {
+    redirect('/?notice=scan-busy');
+  }
+}
+
+function assertNotPublicDemo(feature: string) {
+  if (isPublicMode()) {
+    throw new Error(`${feature} is not available on the public demo`);
   }
 }
 
@@ -119,7 +135,8 @@ export async function triggerTestRunAction(formData: FormData) {
   const rawScanMode = formData.get('scanMode') as string;
   
   const scanMode = ScanModeSchema.parse(rawScanMode || 'STANDARD');
-  const scopeConfig = ScopeConfigSchema.parse(parseScopeConfig(formData));
+  const requestedScope = ScopeConfigSchema.parse(parseScopeConfig(formData));
+  const scopeConfig = isPublicMode() ? limitScopeForPublic(requestedScope) : requestedScope;
 
   logger.info({ selectedCheckCount: rawChecks.length, scanMode }, 'triggerTestRunAction triggered');
 
@@ -134,6 +151,8 @@ export async function triggerTestRunAction(formData: FormData) {
     logger.warn('Blocked trigger run command due to invalid target URL (SSRF)');
     throw new Error('Target URL violates network security policy (SSRF block)');
   }
+
+  await sendBackWhenPublicDemoIsBusy();
 
   // 2. Fetch or create default Organization / Project for demo/vertical slice
   let org = await prisma.organization.findFirst();
@@ -247,6 +266,7 @@ export async function triggerTestRunAction(formData: FormData) {
 
 // Clear all database records and drain test runs queue
 export async function clearAllDataAction() {
+  assertNotPublicDemo('Clearing data');
   logger.info('clearAllDataAction triggered - purging database and queues');
 
   try {
@@ -290,6 +310,7 @@ export async function clearAllDataAction() {
 
 // Save a new configuration as a reusable profile
 export async function saveTestProfileAction(formData: FormData) {
+  assertNotPublicDemo('Saving profiles');
   const name = String(formData.get('profileName') ?? '').trim().slice(0, 80) || 'My Configuration Profile';
   const targetUrl = String(formData.get('targetUrl') ?? '').trim();
   const rawChecks = parseSelectedChecks(formData);
@@ -336,6 +357,7 @@ export async function saveTestProfileAction(formData: FormData) {
 
 // Duplicate and version an existing profile
 export async function duplicateTestProfileAction(profileId: string) {
+  assertNotPublicDemo('Saving profiles');
   logger.info({ profileId }, 'duplicateTestProfileAction triggered');
 
   const existingProfile = await prisma.testProfile.findUnique({
@@ -422,6 +444,7 @@ export async function resumeRunAction(runId: string) {
   if (!['CANCELED', 'FAILED', 'TIMED_OUT'].includes(prior.status)) {
     throw new Error('Only stopped or failed runs can be retried');
   }
+  await sendBackWhenPublicDemoIsBusy();
 
   // Retrying in a fresh run prevents the old worker from writing into the new attempt.
   const retry = await prisma.testRun.create({

@@ -80,5 +80,10 @@ export function decryptCredential(cipherText: string): string {
   }
 }
 
+// A copy that anyone on the internet can use: no operator login, small scans, no bulk deletion.
+export function isPublicMode(): boolean {
+  return process.env['APP_PUBLIC_MODE'] === 'true';
+}
+
 export * from './env';
 

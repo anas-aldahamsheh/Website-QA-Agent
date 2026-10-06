@@ -13,6 +13,8 @@ export type DashboardCopy = {
   resultsTitle: string;
   resultsSubtitle: string;
   clearData: string;
+  publicDemoNote: string;
+  publicDemoBusy: string;
   totalRuns: string;
   runningNow: string;
   needsReview: string;
@@ -97,6 +99,8 @@ const english: DashboardCopy = {
   resultsTitle: 'Results Workspace',
   resultsSubtitle: 'Review progress, coverage, logs, issues, metrics, filters, and page-level findings in a focused workspace.',
   clearData: 'Clear data',
+  publicDemoNote: 'Public demo: one scan at a time, up to 10 pages and 5 minutes each. Only scan sites you own or may test.',
+  publicDemoBusy: 'Another scan is running on this public demo. Please try again in a few minutes.',
   totalRuns: 'Total runs',
   runningNow: 'Running now',
   needsReview: 'Needs review',
@@ -182,6 +186,8 @@ const arabic: DashboardCopy = {
   resultsTitle: 'مساحة النتائج',
   resultsSubtitle: 'راجع التقدم، التغطية، السجلات، المشاكل، المؤشرات، والفلاتر في صفحة منظمة.',
   clearData: 'مسح البيانات',
+  publicDemoNote: 'نسخة تجريبية عامة: فحص واحد في كل مرة، حتى 10 صفحات و5 دقائق لكل فحص. افحص فقط المواقع التي تملكها أو المسموح لك بفحصها.',
+  publicDemoBusy: 'يوجد فحص آخر قيد التشغيل على هذه النسخة التجريبية. يرجى المحاولة بعد بضع دقائق.',
   totalRuns: 'كل الفحوصات',
   runningNow: 'قيد التشغيل',
   needsReview: 'بحاجة مراجعة',

@@ -4,6 +4,11 @@ import { NextRequest, NextResponse } from 'next/server';
 // operator credential before exposing any route in a production deployment.
 export function middleware(request: NextRequest) {
   if (process.env['NODE_ENV'] !== 'production') return NextResponse.next();
+  // The public demo is open by design (it runs with tight limits), and a copy reachable from
+  // this machine alone may skip the operator login.
+  if (process.env['APP_PUBLIC_MODE'] === 'true' || process.env['APP_BASIC_AUTH_DISABLED'] === 'true') {
+    return NextResponse.next();
+  }
 
   const user = process.env['APP_BASIC_AUTH_USER'];
   const password = process.env['APP_BASIC_AUTH_PASSWORD'];

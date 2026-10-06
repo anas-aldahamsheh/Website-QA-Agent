@@ -66,7 +66,7 @@ const inputClass =
 
 const availableChecks = new Set<string>(IMPLEMENTED_CHECK_IDS);
 
-export function ScanLauncherPanel({ copy, profile }: { copy: DashboardCopy; profile?: SavedProfileConfig | undefined }) {
+export function ScanLauncherPanel({ copy, profile, publicDemo = false }: { copy: DashboardCopy; profile?: SavedProfileConfig | undefined; publicDemo?: boolean }) {
   const configuredNumber = (name: string, fallback: number) => {
     const value = profile?.scopeConfig?.[name];
     return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
@@ -141,10 +141,12 @@ export function ScanLauncherPanel({ copy, profile }: { copy: DashboardCopy; prof
         </div>
 
         <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
-          <label className="block">
-            <FieldLabel label={copy.profileName} help="Optional name for saving this scan setup as a reusable profile." />
-            <input className={`${inputClass} mt-2`} name="profileName" placeholder={copy.profilePlaceholder} />
-          </label>
+          {publicDemo ? <div /> : (
+            <label className="block">
+              <FieldLabel label={copy.profileName} help="Optional name for saving this scan setup as a reusable profile." />
+              <input className={`${inputClass} mt-2`} name="profileName" placeholder={copy.profilePlaceholder} />
+            </label>
+          )}
           <div className="flex flex-wrap items-end gap-3">
             <button
               type="submit"
@@ -153,13 +155,15 @@ export function ScanLauncherPanel({ copy, profile }: { copy: DashboardCopy; prof
               <Play className="h-4 w-4" />
               {copy.runScan}
             </button>
-            <button
-              formAction={saveTestProfileAction}
-              className="inline-flex h-10 items-center gap-2 rounded-md border border-border px-4 text-sm font-semibold text-foreground"
-            >
-              <Save className="h-4 w-4" />
-              {copy.saveProfile}
-            </button>
+            {publicDemo ? null : (
+              <button
+                formAction={saveTestProfileAction}
+                className="inline-flex h-10 items-center gap-2 rounded-md border border-border px-4 text-sm font-semibold text-foreground"
+              >
+                <Save className="h-4 w-4" />
+                {copy.saveProfile}
+              </button>
+            )}
           </div>
         </div>
       </form>

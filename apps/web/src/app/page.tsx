@@ -16,6 +16,7 @@ export default async function DashboardPage({ searchParams }: { searchParams?: P
   const locale: DashboardLocale = query.locale === 'ar' ? 'ar' : 'en';
   const copy = getDashboardCopy(locale);
   const selectedProfile = data.profiles.find((profile) => profile.id === query.profileId);
+  const publicDemo = process.env['APP_PUBLIC_MODE'] === 'true';
 
   return (
     <DashboardShell
@@ -25,12 +26,14 @@ export default async function DashboardPage({ searchParams }: { searchParams?: P
       copy={copy}
       locale={locale}
       actions={
-        <form action={clearAllDataAction}>
-          <button className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-semibold text-foreground">
-            <Trash2 className="h-4 w-4" />
-            {copy.clearData}
-          </button>
-        </form>
+        publicDemo ? undefined : (
+          <form action={clearAllDataAction}>
+            <button className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-semibold text-foreground">
+              <Trash2 className="h-4 w-4" />
+              {copy.clearData}
+            </button>
+          </form>
+        )
       }
     >
       <SummaryCards
@@ -41,11 +44,19 @@ export default async function DashboardPage({ searchParams }: { searchParams?: P
         openIssues={data.openIssues}
       />
 
-      <ScanLauncherPanel copy={copy} profile={selectedProfile ? readProfileConfig(selectedProfile.config) : undefined} />
+      {publicDemo && query.notice === 'scan-busy' && (
+        <p role="status" className="rounded-md border border-border bg-secondary px-4 py-3 text-sm font-semibold text-secondary-foreground">{copy.publicDemoBusy}</p>
+      )}
+
+      {publicDemo && (
+        <p className="rounded-md border border-border px-4 py-3 text-sm text-muted-foreground">{copy.publicDemoNote}</p>
+      )}
+
+      <ScanLauncherPanel copy={copy} profile={selectedProfile ? readProfileConfig(selectedProfile.config) : undefined} publicDemo={publicDemo} />
 
       <LiveRunProgressPanel initialProgress={data.liveRunProgress} pinnedRunId={query.runId} />
 
-      <RecentWorkPanel runs={data.runs} profiles={data.profiles} searchParams={query} copy={copy} />
+      <RecentWorkPanel runs={data.runs} profiles={data.profiles} searchParams={query} copy={copy} publicDemo={publicDemo} />
     </DashboardShell>
   );
 }

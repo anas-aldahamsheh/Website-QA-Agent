@@ -10,9 +10,10 @@ type RecentWorkPanelProps = {
   profiles: DashboardProfile[];
   searchParams: DashboardSearchParams;
   copy: DashboardCopy;
+  publicDemo?: boolean;
 };
 
-export function RecentWorkPanel({ runs, profiles, searchParams, copy }: RecentWorkPanelProps) {
+export function RecentWorkPanel({ runs, profiles, searchParams, copy, publicDemo = false }: RecentWorkPanelProps) {
   return (
     <section className="grid gap-4 xl:grid-cols-2">
       <div className="rounded-md border border-border bg-card p-5">
@@ -87,12 +88,14 @@ export function RecentWorkPanel({ runs, profiles, searchParams, copy }: RecentWo
                         {config.targetUrl ?? 'No target stored'} · {config.scanMode ?? 'STANDARD'}
                       </div>
                     </div>
-                    <form action={duplicateSelectedProfileAction}>
-                      <button className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs">
-                        <Copy className="h-3 w-3" />
-                        {copy.duplicate}
-                      </button>
-                    </form>
+                    {publicDemo ? null : (
+                      <form action={duplicateSelectedProfileAction}>
+                        <button className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs">
+                          <Copy className="h-3 w-3" />
+                          {copy.duplicate}
+                        </button>
+                      </form>
+                    )}
                   </div>
                   <div className="mt-2 text-xs text-muted-foreground">
                     {(config.checks ?? []).slice(0, 6).join(', ') || 'No checks stored'}

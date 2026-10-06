@@ -8,7 +8,7 @@ dotenv.config();
 import { executeTestRun } from '@sentinelqa/test-engine';
 import { prisma } from '@sentinelqa/database';
 import { logger } from '@sentinelqa/logger';
-import { CheckIdSchema, ScopeConfigSchema } from '@sentinelqa/contracts';
+import { CheckIdSchema, ScopeConfigSchema, limitScopeForPublic } from '@sentinelqa/contracts';
 
 export async function runJobById(runId: string) {
   logger.info({ runId }, 'Local runner starting execution for TestRun');
@@ -23,7 +23,8 @@ export async function runJobById(runId: string) {
     return;
   }
 
-  const parsedScope = ScopeConfigSchema.parse(run.scopeConfig ? JSON.parse(run.scopeConfig) : {});
+  const storedScope = ScopeConfigSchema.parse(run.scopeConfig ? JSON.parse(run.scopeConfig) : {});
+  const parsedScope = process.env['APP_PUBLIC_MODE'] === 'true' ? limitScopeForPublic(storedScope) : storedScope;
   const savedConfig = JSON.parse(run.testProfile.config) as { checks?: unknown };
   const checks = CheckIdSchema.array().parse(savedConfig.checks ?? []);
 

@@ -132,6 +132,8 @@ All variables are documented in [`.env.example`](.env.example). The most importa
 | `ENCRYPTION_MASTER_KEY` | Random value (32+ bytes) used to encrypt stored credentials |
 | `BETTER_AUTH_SECRET` / `BETTER_AUTH_URL` | Authentication settings |
 | `APP_BASIC_AUTH_USER` / `APP_BASIC_AUTH_PASSWORD` | **Required in production** — protects the dashboard with HTTP Basic Auth (serve it over HTTPS) |
+| `APP_PUBLIC_MODE` | `true` for a copy anyone may use: no login, one scan at a time, at most 10 pages and 5 minutes per scan, no clearing data or saving profiles |
+| `APP_BASIC_AUTH_DISABLED` | `true` skips the login for a copy that only its owner can reach (for example bound to `localhost`) |
 
 > ⚠️ Never commit your real `.env` file. It is already excluded by `.gitignore`.
 

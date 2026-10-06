@@ -1,5 +1,6 @@
 import { prisma } from '@sentinelqa/database';
 import { buildCheckProgress, CHECK_CATALOG, type LiveCheckStatus } from './check-progress';
+import { ACTIVE_RUN_STATUSES, isLiveRun } from './live-runs';
 
 export type { LiveCheckStatus };
 
@@ -57,6 +58,15 @@ type CoverageCounters = {
   apiEndpoints: number;
   pageLimit: number;
 };
+
+// Runs that are still being scanned right now, leaving out ones an earlier stop of the app cut off.
+export async function countLiveRuns(now = new Date()): Promise<number> {
+  const runs = await prisma.testRun.findMany({
+    where: { status: { in: ACTIVE_RUN_STATUSES } },
+    select: { createdAt: true, scopeConfig: true }
+  });
+  return runs.filter((run) => isLiveRun(run, now)).length;
+}
 
 export async function getLiveRunProgress(runId?: string): Promise<LiveRunProgressDto> {
   const run = await prisma.testRun.findFirst({

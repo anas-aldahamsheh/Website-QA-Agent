@@ -16,6 +16,7 @@ export type DashboardSearchParams = {
   dir?: string;
   runId?: string;
   section?: string;
+  notice?: string;
 };
 
 export type DashboardProfile = {
@@ -224,7 +225,8 @@ export function dashboardUrl(pathname: string, next: DashboardSearchParams, curr
   const params = new URLSearchParams();
   const merged = { ...current, ...next };
   for (const [key, value] of Object.entries(merged)) {
-    if (value && value !== 'ALL') {
+    // A one-time notice stays on the page that showed it.
+    if (value && value !== 'ALL' && key !== 'notice') {
       params.set(key, value);
     }
   }

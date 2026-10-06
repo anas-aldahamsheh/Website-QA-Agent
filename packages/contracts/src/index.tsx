@@ -160,6 +160,46 @@ export const ScopeConfigSchema = z.object({
 
 export type ScopeConfig = z.infer<typeof ScopeConfigSchema>;
 
+// Ceilings for a copy that anyone on the internet can use (APP_PUBLIC_MODE=true): every scan runs
+// on its owner's machine and network, so it stays small, polite and identified.
+export const PUBLIC_SCOPE_LIMITS = {
+  maxPages: 10,
+  maxRequests: 300,
+  maxDepth: 2,
+  maxExecutionTime: 5,
+  crawlBudgetPerDomain: 10,
+  maxErrors: 10,
+  maxFileSizeDownload: 10,
+  maxPagesPerTemplate: 5,
+  maxAssetCount: 100,
+  maxExternalLinks: 20,
+  maxScreenshots: 10,
+  maxVideoTraceStorage: 10,
+  requestsPerSecond: 5,
+  requestsPerSecondPerHost: 2,
+  timeoutPerPage: 30,
+  timeoutPerAction: 10,
+  retryCount: 1,
+  maximumRetryAttempts: 1
+} as const satisfies Partial<Record<keyof ScopeConfig, number>>;
+
+export function limitScopeForPublic(scope: ScopeConfig): ScopeConfig {
+  const limited: ScopeConfig = { ...scope };
+  for (const [key, ceiling] of Object.entries(PUBLIC_SCOPE_LIMITS) as [keyof typeof PUBLIC_SCOPE_LIMITS, number][]) {
+    limited[key] = Math.min(scope[key], ceiling);
+  }
+  return {
+    ...limited,
+    concurrency: 1,
+    perHostConcurrency: 1,
+    htmlPageConcurrency: 1,
+    identifyScanner: true,
+    adminAreaExclusion: true,
+    logoutUrlProtection: true,
+    destructiveActionProtection: true
+  };
+}
+
 export const UrlResourceTypeSchema = z.enum([
   'HTML_PAGE',
   'DOWNLOAD',
