@@ -1,4 +1,4 @@
-import { Trash2 } from 'lucide-react';
+import { Info, Radio, Trash2 } from 'lucide-react';
 import { clearAllDataAction } from './actions';
 import { LiveRunProgressPanel } from './live-run-progress';
 import { DashboardShell } from '@/components/dashboard/dashboard-shell';
@@ -28,7 +28,7 @@ export default async function DashboardPage({ searchParams }: { searchParams?: P
       actions={
         publicDemo ? undefined : (
           <form action={clearAllDataAction}>
-            <button className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm font-semibold text-foreground">
+            <button className="btn-danger h-10">
               <Trash2 className="h-4 w-4" />
               {copy.clearData}
             </button>
@@ -36,6 +36,23 @@ export default async function DashboardPage({ searchParams }: { searchParams?: P
         )
       }
     >
+      {publicDemo && query.notice === 'scan-busy' && (
+        <p role="status" className="panel flex items-center gap-3 border-sev-medium/50 px-5 py-4 text-sm font-semibold text-foreground">
+          <span className="relative flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-sev-medium/50 bg-sev-medium/10 text-sev-medium">
+            <span className="animate-pulse-ring absolute inset-0 rounded-lg border border-sev-medium" />
+            <Radio className="h-4 w-4" />
+          </span>
+          {copy.publicDemoBusy}
+        </p>
+      )}
+
+      {publicDemo && (
+        <p className="flex items-start gap-3 rounded-xl border border-dashed border-primary/30 bg-primary/[0.04] px-5 py-3.5 text-sm text-muted-foreground">
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+          {copy.publicDemoNote}
+        </p>
+      )}
+
       <SummaryCards
         copy={copy}
         totalRuns={data.totalRuns}
@@ -43,14 +60,6 @@ export default async function DashboardPage({ searchParams }: { searchParams?: P
         failedRuns={data.failedRuns}
         openIssues={data.openIssues}
       />
-
-      {publicDemo && query.notice === 'scan-busy' && (
-        <p role="status" className="rounded-md border border-border bg-secondary px-4 py-3 text-sm font-semibold text-secondary-foreground">{copy.publicDemoBusy}</p>
-      )}
-
-      {publicDemo && (
-        <p className="rounded-md border border-border px-4 py-3 text-sm text-muted-foreground">{copy.publicDemoNote}</p>
-      )}
 
       <ScanLauncherPanel copy={copy} profile={selectedProfile ? readProfileConfig(selectedProfile.config) : undefined} publicDemo={publicDemo} />
 

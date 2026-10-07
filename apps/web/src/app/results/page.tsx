@@ -23,9 +23,9 @@ export default async function ResultsPage({ searchParams }: { searchParams?: Pro
       locale={locale}
     >
       {data.runs.length === 0 ? (
-        <EmptyState title={copy.noResultsTitle} body={copy.noResultsBody} />
+        <EmptyState title={copy.noResultsTitle} body={copy.noResultsBody} cta={copy.navRunCenter} />
       ) : (
-        <div className="space-y-6">
+        <div className="space-y-5">
           <ResultsWorkspaceHeader
             selectedRun={data.selectedRun}
             activeSection={activeSection}
@@ -37,7 +37,7 @@ export default async function ResultsPage({ searchParams }: { searchParams?: Pro
             copy={copy}
           />
 
-          <div className="space-y-6">
+          <div className="space-y-5">
             <ResultsSidebar
             runs={data.runs}
             categories={data.categoryOrder}
@@ -46,7 +46,7 @@ export default async function ResultsPage({ searchParams }: { searchParams?: Pro
             copy={copy}
           />
 
-            <div className="min-w-0 space-y-6">
+            <div className="min-w-0 space-y-5">
               {activeSection === 'overview' ? (
                 <ResultsOverviewPanel
                   runs={data.runs}

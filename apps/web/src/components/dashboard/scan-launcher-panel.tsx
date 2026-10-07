@@ -1,9 +1,10 @@
-import { Play, Save } from 'lucide-react';
+import { Save, ShieldCheck } from 'lucide-react';
 import { saveTestProfileAction, triggerTestRunAction } from '@/app/actions';
 import type { DashboardCopy } from './dashboard-copy';
 import type { SavedProfileConfig } from '@/server/queries/dashboard';
 import { IMPLEMENTED_CHECK_IDS } from '@sentinelqa/contracts';
-import { FormSelect } from './form-select';
+import { Reveal, RevealItem } from '@/components/motion/primitives';
+import { LaunchButton, ModeSelector, TargetComposer } from './launcher-client';
 
 const checkGroups = [
   {
@@ -61,9 +62,6 @@ const checkGroups = [
   }
 ] as const;
 
-const inputClass =
-  'w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground outline-none focus:border-ring';
-
 const availableChecks = new Set<string>(IMPLEMENTED_CHECK_IDS);
 
 export function ScanLauncherPanel({ copy, profile, publicDemo = false }: { copy: DashboardCopy; profile?: SavedProfileConfig | undefined; publicDemo?: boolean }) {
@@ -72,117 +70,160 @@ export function ScanLauncherPanel({ copy, profile, publicDemo = false }: { copy:
     return typeof value === 'number' && Number.isFinite(value) ? value : fallback;
   };
   return (
-    <section className="rounded-md border border-border bg-card p-5">
-      <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h2 className="text-lg font-semibold">{copy.startScan}</h2>
-          <p className="mt-1 text-sm text-muted-foreground">{copy.startScanBody}</p>
+    <Reveal as="section" className="panel overflow-hidden">
+      <div className="flex flex-col gap-1 border-b border-border px-5 py-4 sm:flex-row sm:items-center sm:justify-between md:px-7">
+        <div className="flex items-center gap-3">
+          <span className="font-mono text-[11px] text-primary">01</span>
+          <h2 className="text-lg font-semibold tracking-tight">{copy.startScan}</h2>
         </div>
+        <p className="text-sm text-muted-foreground">{copy.startScanBody}</p>
       </div>
 
-      <form action={triggerTestRunAction} className="mt-5 space-y-5">
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(220px,1fr)]">
-          <label className="block">
-            <FieldLabel label={copy.targetUrl} help="The public website URL to scan. Use the home page or the exact page you want as the entry point." />
-            <input className={`${inputClass} mt-2`} name="targetUrl" type="url" placeholder="https://example.com" defaultValue={profile?.targetUrl} required />
-          </label>
-          <label className="block">
-            <FieldLabel label={copy.scanMode} help="Labels the run. The limits and enabled checks below determine scan coverage." />
-            <FormSelect
+      <form action={triggerTestRunAction} className="divide-y divide-border">
+        <div className="grid gap-8 px-5 py-6 md:px-7 xl:grid-cols-[minmax(0,1fr)_360px]">
+          <RevealItem>
+            <TargetComposer
+              label={<FieldLabel label={copy.targetUrl} help="The public website URL to scan. Use the home page or the exact page you want as the entry point." />}
+              defaultValue={profile?.targetUrl}
+              readouts={{
+                protocol: copy.readoutProtocol,
+                host: copy.readoutHost,
+                path: copy.readoutPath,
+                status: copy.scopeStatus,
+                idle: copy.scopeIdle,
+                locked: copy.scopeLocked
+              }}
+            />
+          </RevealItem>
+          <RevealItem className="space-y-6">
+            <ModeSelector
               name="scanMode"
               defaultValue={profile?.scanMode ?? 'STANDARD'}
-              ariaLabel={copy.scanMode}
-              className="mt-2"
+              label={<FieldLabel label={copy.scanMode} help="Labels the run. The limits and enabled checks below determine scan coverage." />}
               options={[
-                { value: 'STANDARD', label: copy.standard },
-                { value: 'DEEP', label: copy.deep },
-                { value: 'CUSTOM', label: copy.assisted }
+                { value: 'STANDARD', label: copy.standard, hint: copy.standardHint },
+                { value: 'DEEP', label: copy.deep, hint: copy.deepHint },
+                { value: 'CUSTOM', label: copy.assisted, hint: copy.customHint }
               ]}
             />
-          </label>
-        </div>
-
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <NumberField name="maxPages" label={copy.maxPages} help="Maximum number of HTML pages the scan can visit." defaultValue={configuredNumber('maxPages', 100)} />
-          <NumberField name="maxDepth" label={copy.maxDepth} help="Maximum link depth from the starting URL." defaultValue={configuredNumber('maxDepth', 5)} />
-          <NumberField name="maxRequests" label={copy.maxRequests} help="Maximum total network requests before stopping." defaultValue={configuredNumber('maxRequests', 500)} />
-          <NumberField name="maxExecutionTime" label={copy.maxMinutes} help="Maximum runtime budget in minutes." defaultValue={configuredNumber('maxExecutionTime', 30)} />
-          <NumberField name="requestsPerSecond" label={copy.requestsPerSecond} help="Maximum request rate. Lower values are gentler on the target site." defaultValue={configuredNumber('requestsPerSecond', 10)} />
-          <NumberField name="retryCount" label={copy.retries} help="How many times temporary failures should be retried." defaultValue={configuredNumber('retryCount', 3)} />
-        </div>
-
-        <div className="grid gap-3 xl:grid-cols-5">
-          {checkGroups.map((group) => (
-            <fieldset key={group.title} className="rounded-md border border-border bg-background p-3">
-              <legend className="px-1 text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                <span className="inline-flex items-center gap-1">
-                  {group.title}
-                  <HelpTip text={group.help} />
-                </span>
-              </legend>
-              <div className="mt-2 space-y-2">
-                {group.checks.map(([value, label, help]) => (
-                  <label key={value} className={`flex items-center gap-2 text-sm ${availableChecks.has(value) ? '' : 'opacity-50'}`}>
-                    <input
-                      className="h-4 w-4 rounded border-input accent-primary"
-                      type="checkbox"
-                      name="checks"
-                      value={value}
-                      defaultChecked={availableChecks.has(value) && (profile?.checks ? profile.checks.includes(value) : true)}
-                      disabled={!availableChecks.has(value)}
-                    />
-                    {label}
-                    <HelpTip text={availableChecks.has(value) ? help : `${help} This check is not implemented yet.`} />
-                  </label>
-                ))}
+            <div>
+              <div className="eyebrow mb-3">{copy.limitsTitle}</div>
+              <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 xl:grid-cols-2">
+                <NumberField name="maxPages" label={copy.maxPages} help="Maximum number of HTML pages the scan can visit." defaultValue={configuredNumber('maxPages', 100)} />
+                <NumberField name="maxDepth" label={copy.maxDepth} help="Maximum link depth from the starting URL." defaultValue={configuredNumber('maxDepth', 5)} />
+                <NumberField name="maxRequests" label={copy.maxRequests} help="Maximum total network requests before stopping." defaultValue={configuredNumber('maxRequests', 500)} />
+                <NumberField name="maxExecutionTime" label={copy.maxMinutes} help="Maximum runtime budget in minutes." defaultValue={configuredNumber('maxExecutionTime', 30)} />
+                <NumberField name="requestsPerSecond" label={copy.requestsPerSecond} help="Maximum request rate. Lower values are gentler on the target site." defaultValue={configuredNumber('requestsPerSecond', 10)} />
+                <NumberField name="retryCount" label={copy.retries} help="How many times temporary failures should be retried." defaultValue={configuredNumber('retryCount', 3)} />
               </div>
-            </fieldset>
-          ))}
+            </div>
+          </RevealItem>
         </div>
 
-        <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto]">
-          {publicDemo ? <div /> : (
-            <label className="block">
+        <div className="px-5 py-6 md:px-7">
+          <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+            <div className="flex items-center gap-3">
+              <span className="font-mono text-[11px] text-primary">02</span>
+              <h3 className="font-semibold tracking-tight">{copy.checksTitle}</h3>
+            </div>
+            <p className="text-xs text-muted-foreground">{copy.checksSelectedHint}</p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
+            {checkGroups.map((group, groupIndex) => (
+              <RevealItem key={group.title}>
+                <fieldset className="panel-inset h-full p-3">
+                  <legend className="sr-only">{group.title}</legend>
+                  <div className="mb-2 flex items-center justify-between px-1">
+                    <span className="inline-flex items-center gap-1.5 font-mono text-[10.5px] font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                      <span className="text-primary/80">{String(groupIndex + 1).padStart(2, '0')}</span>
+                      {group.title}
+                    </span>
+                    <HelpTip text={group.help} />
+                  </div>
+                  <div className="space-y-1">
+                    {group.checks.map(([value, label, help]) => {
+                      const available = availableChecks.has(value);
+                      return (
+                        <label
+                          key={value}
+                          className={`group/check flex items-center gap-2.5 rounded-lg px-1.5 py-1.5 text-[13px] transition-colors ${available ? 'cursor-pointer hover:bg-secondary/70' : 'cursor-not-allowed opacity-45'}`}
+                        >
+                          <input
+                            className="peer sr-only"
+                            type="checkbox"
+                            name="checks"
+                            value={value}
+                            defaultChecked={available && (profile?.checks ? profile.checks.includes(value) : true)}
+                            disabled={!available}
+                          />
+                          <span
+                            aria-hidden
+                            className="relative h-[18px] w-8 shrink-0 rounded-full border border-input bg-secondary transition-colors duration-300 after:absolute after:start-[2px] after:top-[2px] after:h-3 after:w-3 after:rounded-full after:bg-muted-foreground after:transition-all after:duration-300 after:ease-out-expo peer-checked:border-primary/60 peer-checked:bg-primary/20 peer-checked:after:translate-x-[14px] peer-checked:after:bg-primary peer-checked:after:shadow-[0_0_10px_hsl(var(--primary))] peer-focus-visible:ring-2 peer-focus-visible:ring-ring rtl:peer-checked:after:-translate-x-[14px]"
+                          />
+                          <span className="min-w-0 flex-1 truncate peer-checked:text-foreground">{label}</span>
+                          <HelpTip text={available ? help : `${help} This check is not implemented yet.`} />
+                        </label>
+                      );
+                    })}
+                  </div>
+                </fieldset>
+              </RevealItem>
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-5 bg-background/40 px-5 py-5 md:px-7 lg:flex-row lg:items-end lg:justify-between">
+          {publicDemo ? (
+            <p className="flex max-w-xl items-start gap-2 text-xs leading-5 text-muted-foreground">
+              <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+              {copy.launchNote}
+            </p>
+          ) : (
+            <label className="block w-full max-w-md">
               <FieldLabel label={copy.profileName} help="Optional name for saving this scan setup as a reusable profile." />
-              <input className={`${inputClass} mt-2`} name="profileName" placeholder={copy.profilePlaceholder} />
+              <input className="field mt-2" name="profileName" placeholder={copy.profilePlaceholder} />
             </label>
           )}
-          <div className="flex flex-wrap items-end gap-3">
-            <button
-              type="submit"
-              className="inline-flex h-10 items-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-primary-foreground"
-            >
-              <Play className="h-4 w-4" />
-              {copy.runScan}
-            </button>
+          <div className="flex flex-wrap items-center gap-3">
             {publicDemo ? null : (
               <button
                 formAction={saveTestProfileAction}
-                className="inline-flex h-10 items-center gap-2 rounded-md border border-border px-4 text-sm font-semibold text-foreground"
+                className="btn-ghost h-14 px-5"
               >
                 <Save className="h-4 w-4" />
                 {copy.saveProfile}
               </button>
             )}
+            <LaunchButton label={copy.runScan} launching={copy.launching} />
           </div>
         </div>
       </form>
-    </section>
+    </Reveal>
   );
 }
 
 function NumberField({ name, label, help, defaultValue }: { name: string; label: string; help: string; defaultValue: number }) {
   return (
-    <label className="block">
-      <FieldLabel label={label} help={help} />
-      <input className={`${inputClass} mt-2`} name={name} type="number" min={1} defaultValue={defaultValue} />
+    <label className="group/num panel-inset block px-3 py-2.5 transition-colors focus-within:border-primary/60 hover:border-muted-foreground/40">
+      <span className="flex items-center justify-between gap-1 text-[11px] text-muted-foreground">
+        <span className="truncate">{label}</span>
+        <HelpTip text={help} />
+      </span>
+      <input
+        className="mt-1 w-full bg-transparent font-mono text-xl font-medium text-foreground outline-none transition-colors group-focus-within/num:text-primary"
+        name={name}
+        type="number"
+        min={1}
+        defaultValue={defaultValue}
+        dir="ltr"
+      />
     </label>
   );
 }
 
 function FieldLabel({ label, help }: { label: string; help: string }) {
   return (
-    <span className="inline-flex items-center gap-1 text-sm font-medium">
+    <span className="inline-flex items-center gap-1.5 text-sm font-medium">
       {label}
       <HelpTip text={help} />
     </span>
@@ -194,11 +235,11 @@ function HelpTip({ text }: { text: string }) {
     <span
       tabIndex={0}
       aria-label={text}
-      className="group/help relative z-20 inline-flex h-4 w-4 shrink-0 cursor-help items-center justify-center rounded-full border border-border bg-secondary text-[10px] font-bold text-muted-foreground outline-none focus:ring-2 focus:ring-ring/30"
+      className="group/help relative z-20 inline-flex h-4 w-4 shrink-0 cursor-help items-center justify-center rounded-full border border-border bg-secondary font-mono text-[9px] font-bold text-muted-foreground outline-none transition-colors hover:border-primary/60 hover:text-primary focus:ring-2 focus:ring-ring/30"
     >
       ?
       <span
-        className="pointer-events-none absolute bottom-6 left-1/2 z-[9999] hidden w-72 -translate-x-1/2 whitespace-normal rounded-md border border-border p-3 text-left text-xs font-semibold leading-5 text-popover-foreground opacity-100 shadow-[0_18px_60px_hsl(var(--background)/0.9)] ring-1 ring-border group-hover/help:block group-focus/help:block"
+        className="pointer-events-none invisible absolute bottom-6 left-1/2 z-[9999] w-72 -translate-x-1/2 translate-y-1 whitespace-normal rounded-lg border border-border p-3 text-start font-sans text-xs font-medium leading-5 text-popover-foreground opacity-0 shadow-[0_18px_60px_hsl(var(--background)/0.9)] transition-all duration-300 ease-out-expo group-hover/help:visible group-hover/help:translate-y-0 group-hover/help:opacity-100 group-focus/help:visible group-focus/help:translate-y-0 group-focus/help:opacity-100"
         style={{ backgroundColor: 'hsl(var(--popover))' }}
       >
         {text}

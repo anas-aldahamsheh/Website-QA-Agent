@@ -1,8 +1,12 @@
-import { Activity, BarChart3, Github, Home, LayoutDashboard, Linkedin, ListChecks, Phone, ShieldCheck } from 'lucide-react';
+import { ArrowUpRight, Github, Linkedin, ListChecks, Phone } from 'lucide-react';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
+import { SignalField } from '@/components/motion/signal-field';
+import { BrandMark } from './brand-mark';
 import { DashboardPreferences } from './dashboard-preferences';
 import type { DashboardCopy, DashboardLocale } from './dashboard-copy';
+import { PageIntro } from './page-intro';
+import { ShellNav } from './shell-nav';
 import { WelcomeOverlay } from './welcome-overlay';
 
 type DashboardShellProps = {
@@ -15,187 +19,136 @@ type DashboardShellProps = {
   children: ReactNode;
 };
 
+const capabilityTicker = ['SEO', 'Accessibility', 'Performance', 'Frontend', 'Network / API', 'Security', 'Privacy', 'Crawl coverage', 'Structured data', 'Responsive'];
+
 export function DashboardShell({ activePage, title, subtitle, copy, locale, actions, children }: DashboardShellProps) {
-  const navigationItems = [
-    { href: '/Run%20Center', label: copy.navRunCenter, icon: Home, key: 'home' },
-    { href: '/results', label: copy.navResults, icon: BarChart3, key: 'results' }
-  ] as const;
+  const navLabels = { home: copy.navRunCenter, results: copy.navResults };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="relative min-h-screen text-foreground">
+      <SignalField />
       <WelcomeOverlay locale={locale} />
-      <aside className="fixed inset-y-0 left-0 hidden w-64 border-r border-border bg-card px-4 py-5 lg:block">
-        <Link href="/Run%20Center" className="mb-8 flex items-center gap-3 rounded-md px-2">
-          <span className="flex h-10 w-10 items-center justify-center rounded-md bg-primary text-primary-foreground">
-            <ShieldCheck className="h-5 w-5" />
-          </span>
-          <span>
-            <span className="block text-sm font-semibold">{copy.brandName}</span>
-            <span className="text-xs text-muted-foreground">{copy.brandSubtitle}</span>
+
+      <aside className="fixed inset-y-0 start-0 z-30 hidden w-[264px] flex-col border-e border-border/80 bg-background/70 px-4 py-5 backdrop-blur-xl lg:flex">
+        <Link href="/Run%20Center" className="group mb-9 flex items-center gap-3 rounded-xl px-2">
+          <BrandMark size={42} />
+          <span className="min-w-0">
+            <span className="block text-[15px] font-semibold tracking-tight">{copy.brandName}</span>
+            <span className="eyebrow block text-[9.5px]">{copy.brandSubtitle}</span>
           </span>
         </Link>
 
-        <nav className="space-y-1">
-          {navigationItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = activePage === item.key;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 rounded-md px-3 py-2 text-sm transition ${
-                  isActive
-                    ? 'bg-primary text-primary-foreground'
-                    : 'text-muted-foreground hover:bg-secondary hover:text-secondary-foreground'
-                }`}
-              >
-                <Icon className="h-4 w-4" />
-                {item.label}
-              </Link>
-            );
-          })}
-        </nav>
+        <div className="eyebrow mb-2 px-3">{copy.workspace}</div>
+        <ShellNav activePage={activePage} labels={navLabels} layout="rail" />
 
-        <div className="mt-8 rounded-md border border-border bg-background p-3">
-          <div className="flex items-center gap-2 text-xs font-semibold text-foreground">
-            <Activity className="h-4 w-4 text-primary" />
-            {copy.liveStatus}
+        <div className="mt-auto space-y-3">
+          <div className="panel overflow-hidden p-4">
+            <div className="flex items-center gap-2 text-xs font-semibold">
+              <span className="relative flex h-2 w-2">
+                <span className="animate-pulse-ring absolute inset-0 rounded-full bg-primary" />
+                <span className="relative h-2 w-2 rounded-full bg-primary" />
+              </span>
+              {copy.liveStatus}
+            </div>
+            <SignalWave />
+            <p className="text-[11.5px] leading-5 text-muted-foreground">{copy.liveStatusBody}</p>
           </div>
-          <p className="mt-2 text-xs leading-5 text-muted-foreground">
-            {copy.liveStatusBody}
-          </p>
+          <div className="flex items-center justify-between px-2 font-mono text-[10px] text-muted-foreground/70">
+            <span>v2.0 · signal</span>
+            <span dir="ltr">© 2026</span>
+          </div>
         </div>
       </aside>
 
-      <div className="flex min-h-screen flex-col lg:pl-64">
-        <header className="sticky top-0 z-20 border-b border-border bg-background/95 px-4 py-4 backdrop-blur md:px-8">
-          <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-            <div>
-              <div className="mb-3 flex gap-2 lg:hidden">
-                {navigationItems.map((item) => {
-                  const Icon = item.icon;
-                  const isActive = activePage === item.key;
-                  return (
-                    <Link
-                      key={item.href}
-                      href={item.href}
-                      className={`inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-xs ${
-                        isActive ? 'bg-primary text-primary-foreground' : 'text-muted-foreground'
-                      }`}
-                    >
-                      <Icon className="h-4 w-4" />
-                      {item.label}
-                    </Link>
-                  );
-                })}
-              </div>
-              <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-primary">
-                <LayoutDashboard className="h-4 w-4" />
-                {copy.workspace}
-              </div>
-              <h1 className="mt-2 text-2xl font-semibold md:text-3xl">{title}</h1>
-              <p className="mt-1 max-w-3xl text-sm text-muted-foreground">{subtitle}</p>
+      <div className="flex min-h-screen flex-col lg:ps-[264px]">
+        <header className="sticky top-0 z-20 border-b border-border/70 bg-background/60 px-4 py-3 backdrop-blur-xl md:px-8">
+          <div className="mx-auto flex max-w-[1320px] items-center justify-between gap-3">
+            <Link href="/Run%20Center" className="flex items-center gap-2.5 lg:hidden">
+              <BrandMark size={32} />
+              <span className="text-sm font-semibold tracking-tight">{copy.brandName}</span>
+            </Link>
+            <div className="hidden items-center gap-2 font-mono text-[11px] text-muted-foreground lg:flex">
+              <span className="text-foreground/80">{copy.workspace}</span>
+              <span className="text-muted-foreground/50">/</span>
+              <span className="text-primary">{activePage === 'home' ? copy.navRunCenter : copy.navResults}</span>
             </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <DashboardPreferences locale={locale} />
-              {actions}
-            </div>
+            <DashboardPreferences locale={locale} />
+          </div>
+          <div className="mx-auto mt-3 max-w-[1320px] lg:hidden">
+            <ShellNav activePage={activePage} labels={navLabels} layout="bar" />
           </div>
         </header>
-        <main className="flex-1 px-4 py-6 md:px-8">
-          <div className="mx-auto max-w-7xl space-y-6">{children}</div>
+
+        <main className="flex-1 px-4 pb-16 pt-8 md:px-8 md:pt-12">
+          <div className="mx-auto max-w-[1320px] space-y-8">
+            <PageIntro crumb={`${copy.brandName} / ${activePage === 'home' ? copy.navRunCenter : copy.navResults}`} title={title} subtitle={subtitle} side={actions} />
+            {children}
+          </div>
         </main>
 
-        <footer className="mt-auto border-t border-border bg-card/95 text-card-foreground">
-          <div className="mx-auto max-w-7xl px-4 py-10 md:px-8">
-            <div className="grid gap-8 sm:grid-cols-2 md:grid-cols-3">
-              {/* Brand & Creator Info */}
-              <div className="space-y-3">
-                <div className="flex items-center gap-2.5">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground">
-                    <ShieldCheck className="h-5 w-5" />
-                  </span>
+        <footer className="relative mt-auto overflow-hidden border-t border-border/80 bg-background/70 backdrop-blur-xl">
+          <div className="border-b border-border/60 py-3" aria-hidden>
+            <div className="flex w-max animate-marquee gap-10 whitespace-nowrap font-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground/70">
+              {[...capabilityTicker, ...capabilityTicker].map((item, index) => (
+                <span key={`${item}-${index}`} className="flex items-center gap-10">
+                  {item}
+                  <span className="h-1 w-1 rounded-full bg-primary/70" />
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="mx-auto max-w-[1320px] px-4 py-12 md:px-8">
+            <div className="grid gap-10 md:grid-cols-[1.4fr_1fr_0.8fr]">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <BrandMark size={38} live={false} />
                   <div>
-                    <h3 className="text-sm font-extrabold tracking-tight text-foreground">
+                    <h3 className="text-base font-semibold tracking-tight">
                       Website QA <span className="text-primary">Agent</span>
                     </h3>
-                    <p className="text-xs font-medium text-muted-foreground">
-                      {locale === 'ar' ? 'تطوير: أنس الدحامشة' : 'Engineered by Anas Aldahamsheh'}
+                    <p className="text-xs text-muted-foreground">
+                      {locale === 'ar' ? 'تطوير: أنس الدهامشة' : 'Engineered by Anas Al-Dahamsheh'}
                     </p>
                   </div>
                 </div>
-                <p className="text-xs leading-relaxed text-muted-foreground">
+                <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
                   {locale === 'ar'
                     ? 'منظومة عملية متقدمة لفحص ومراقبة جودة المواقع، متابعة التقدم لحظياً، وتنظيم وتحليل النتائج الفنية بدقة.'
                     : 'A practical console for website quality scanning, live progress tracking, and organized technical review.'}
                 </p>
               </div>
 
-              {/* Developer Contacts */}
               <div className="space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  {locale === 'ar' ? 'بيانات التواصل المباشر' : 'Contact Developer'}
-                </h4>
-                <div className="flex flex-col items-start gap-2.5 text-xs">
-                  {/* Phone */}
-                  <a
-                    href="tel:+962789495167"
-                    className="group inline-flex items-center gap-2.5 font-medium text-foreground transition-colors hover:text-primary"
-                  >
-                    <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary transition group-hover:bg-primary/20">
-                      <Phone className="h-3.5 w-3.5 shrink-0" />
-                    </div>
-                    <span dir="ltr" className="font-mono text-xs">+962 789 495 167</span>
-                  </a>
-
-                  {/* LinkedIn */}
-                  <a
-                    href="https://www.linkedin.com/in/anas-aldahamsheh"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group inline-flex items-center gap-2.5 font-medium text-foreground transition-colors hover:text-primary"
-                  >
-                    <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary transition group-hover:bg-primary/20">
-                      <Linkedin className="h-3.5 w-3.5 shrink-0" />
-                    </div>
-                    <span dir="ltr" className="font-mono text-xs">linkedin.com/in/anas-aldahamsheh</span>
-                  </a>
-
-                  {/* GitHub */}
-                  <a
-                    href="https://github.com/anas-aldahamsheh"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="group inline-flex items-center gap-2.5 font-medium text-foreground transition-colors hover:text-primary"
-                  >
-                    <div className="flex h-7 w-7 items-center justify-center rounded-md bg-primary/10 text-primary transition group-hover:bg-primary/20">
-                      <Github className="h-3.5 w-3.5 shrink-0" />
-                    </div>
-                    <span dir="ltr" className="font-mono text-xs">github.com/anas-aldahamsheh</span>
-                  </a>
+                <h4 className="eyebrow">{locale === 'ar' ? 'بيانات التواصل المباشر' : 'Contact developer'}</h4>
+                <div className="flex flex-col items-start gap-1 text-xs">
+                  <FooterContact href="tel:+962789495167" icon={<Phone className="h-3.5 w-3.5" />} label="+962 789 495 167" />
+                  <FooterContact href="https://www.linkedin.com/in/anas-aldahamsheh" icon={<Linkedin className="h-3.5 w-3.5" />} label="linkedin.com/in/anas-aldahamsheh" external />
+                  <FooterContact href="https://github.com/anas-aldahamsheh" icon={<Github className="h-3.5 w-3.5" />} label="github.com/anas-aldahamsheh" external />
                 </div>
               </div>
 
-              {/* Quick Links */}
               <div className="space-y-3">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  {locale === 'ar' ? 'روابط سريعة' : 'Navigation'}
-                </h4>
-                <div className="flex flex-col gap-2 text-xs font-medium">
-                  <Link href="/Run%20Center" className="text-muted-foreground hover:text-primary transition-colors">
+                <h4 className="eyebrow">{locale === 'ar' ? 'روابط سريعة' : 'Navigation'}</h4>
+                <div className="flex flex-col gap-2 text-sm">
+                  <Link href="/Run%20Center" className="group inline-flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground">
                     {copy.navRunCenter}
+                    <ArrowUpRight className="h-3.5 w-3.5 -translate-x-1 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100" />
                   </Link>
-                  <Link href="/results" className="text-muted-foreground hover:text-primary transition-colors">
+                  <Link href="/results" className="group inline-flex items-center gap-1.5 text-muted-foreground transition-colors hover:text-foreground">
                     {copy.navResults}
+                    <ArrowUpRight className="h-3.5 w-3.5 -translate-x-1 opacity-0 transition-all duration-300 group-hover:translate-x-0 group-hover:opacity-100" />
                   </Link>
                 </div>
               </div>
             </div>
 
-            {/* Bottom copyright line */}
-            <div className="mt-8 border-t border-border pt-5 text-center text-xs text-muted-foreground sm:text-start">
-              <p>
-                © 2026 <strong>Anas Aldahamsheh</strong>. {locale === 'ar' ? 'جميع الحقوق محفوظة.' : 'All rights reserved.'}
+            <div className="mt-12 flex flex-col items-start justify-between gap-6 border-t border-border/60 pt-6 sm:flex-row sm:items-end">
+              <p className="text-xs text-muted-foreground">
+                © 2026 <strong className="font-semibold text-foreground">Anas Al-Dahamsheh</strong>. {locale === 'ar' ? 'جميع الحقوق محفوظة.' : 'All rights reserved.'}
+              </p>
+              <p aria-hidden className="display select-none text-5xl leading-none text-foreground/[0.07] sm:text-7xl" dir="ltr">
+                quality, observed.
               </p>
             </div>
           </div>
@@ -205,12 +158,62 @@ export function DashboardShell({ activePage, title, subtitle, copy, locale, acti
   );
 }
 
-export function EmptyState({ title, body }: { title: string; body: string }) {
+function FooterContact({ href, icon, label, external = false }: { href: string; icon: ReactNode; label: string; external?: boolean }) {
   return (
-    <div className="rounded-md border border-border bg-card p-6 text-center">
-      <ListChecks className="mx-auto h-8 w-8 text-muted-foreground" />
-      <h2 className="mt-3 text-sm font-semibold">{title}</h2>
-      <p className="mt-1 text-sm text-muted-foreground">{body}</p>
+    <a
+      href={href}
+      {...(external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+      className="group inline-flex items-center gap-2.5 rounded-lg py-1.5 pe-2 font-medium text-foreground/90 transition-colors hover:text-primary"
+    >
+      <span className="flex h-7 w-7 items-center justify-center rounded-lg border border-border bg-card text-primary transition-all duration-300 group-hover:border-primary/50 group-hover:shadow-[0_0_18px_-4px_hsl(var(--primary))]">
+        {icon}
+      </span>
+      <span dir="ltr" className="font-mono text-xs">{label}</span>
+    </a>
+  );
+}
+
+// A small oscilloscope trace for the live status card.
+function SignalWave() {
+  return (
+    <svg viewBox="0 0 200 36" className="my-3 h-9 w-full" aria-hidden preserveAspectRatio="none">
+      <defs>
+        <linearGradient id="wave-fade" x1="0" x2="1">
+          <stop offset="0" stopColor="hsl(var(--primary))" stopOpacity="0" />
+          <stop offset="0.5" stopColor="hsl(var(--primary))" stopOpacity="1" />
+          <stop offset="1" stopColor="hsl(var(--primary))" stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      <path
+        d="M0 18 H40 L48 18 L54 6 L60 30 L66 12 L72 22 L78 18 H120 L128 18 L134 4 L140 32 L146 10 L152 24 L158 18 H200"
+        fill="none"
+        stroke="url(#wave-fade)"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+        pathLength="200"
+        strokeDasharray="70 130"
+      >
+        <animate attributeName="stroke-dashoffset" from="200" to="0" dur="2.6s" repeatCount="indefinite" />
+      </path>
+    </svg>
+  );
+}
+
+export function EmptyState({ title, body, cta }: { title: string; body: string; cta?: string }) {
+  return (
+    <div className="panel flex flex-col items-center px-6 py-16 text-center">
+      <span className="relative mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border border-border bg-background">
+        <span className="animate-pulse-ring absolute inset-0 rounded-2xl border border-primary/50" />
+        <ListChecks className="h-7 w-7 text-primary" />
+      </span>
+      <h2 className="display text-3xl">{title}</h2>
+      <p className="mt-2 max-w-md text-sm text-muted-foreground">{body}</p>
+      {cta ? (
+        <Link href="/Run%20Center" className="btn-primary mt-6">
+          {cta}
+          <ArrowUpRight className="h-4 w-4" />
+        </Link>
+      ) : null}
     </div>
   );
 }

@@ -1,9 +1,11 @@
-import { Copy, ExternalLink, RotateCcw } from 'lucide-react';
+import { ArrowUpRight, Copy, RotateCcw } from 'lucide-react';
 import { duplicateTestProfileAction, resumeRunAction } from '@/app/actions';
 import { RunStopButton } from '@/components/dashboard/run-stop-button';
 import Link from 'next/link';
 import { dashboardUrl, readProfileConfig, readScopeConfigPreview, type DashboardProfile, type DashboardRun, type DashboardSearchParams } from '@/server/queries/dashboard';
+import { Reveal, RevealItem } from '@/components/motion/primitives';
 import type { DashboardCopy } from './dashboard-copy';
+import { StatusChip, toneFor } from './status-chip';
 
 type RecentWorkPanelProps = {
   runs: DashboardRun[];
@@ -15,100 +17,117 @@ type RecentWorkPanelProps = {
 
 export function RecentWorkPanel({ runs, profiles, searchParams, copy, publicDemo = false }: RecentWorkPanelProps) {
   return (
-    <section className="grid gap-4 xl:grid-cols-2">
-      <div className="rounded-md border border-border bg-card p-5">
-        <div className="flex items-center justify-between gap-3">
+    <section className="grid gap-4 xl:grid-cols-[1.25fr_1fr]">
+      <Reveal className="panel overflow-hidden">
+        <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4 md:px-6">
           <div>
-            <h2 className="text-lg font-semibold">{copy.recentRuns}</h2>
+            <h2 className="flex items-center gap-3 text-lg font-semibold tracking-tight">
+              {copy.recentRuns}
+            </h2>
             <p className="mt-1 text-sm text-muted-foreground">{copy.recentRunsBody}</p>
           </div>
-          <Link className="inline-flex items-center gap-2 rounded-md border border-border px-3 py-2 text-sm" href="/results">
+          <Link className="btn-ghost shrink-0" href="/results">
             {copy.navResults}
-            <ExternalLink className="h-4 w-4" />
+            <ArrowUpRight className="h-4 w-4" />
           </Link>
         </div>
-        <div className="mt-4 space-y-3">
+        <div className="divide-y divide-border">
           {runs.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{copy.noRuns}</p>
+            <p className="px-6 py-10 text-center text-sm text-muted-foreground">{copy.noRuns}</p>
           ) : (
             runs.slice(0, 5).map((run) => {
               const scope = readScopeConfigPreview(run.scopeConfig);
               const resumeSelectedRunAction = resumeRunAction.bind(null, run.id);
+              const tone = toneFor(run.status);
               return (
-                <div key={run.id} className="rounded-md border border-border bg-background p-3">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <div className="font-mono text-xs text-muted-foreground">{run.id.slice(0, 8)}</div>
-                      <div className="mt-1 text-sm font-semibold">{run.environment.targetUrl}</div>
+                <RevealItem key={run.id}>
+                  <div className="group relative flex flex-col gap-3 px-5 py-4 transition-colors hover:bg-secondary/40 sm:flex-row sm:items-center md:px-6">
+                    <span aria-hidden className="absolute inset-y-3 start-0 w-[2px] origin-center scale-y-0 rounded-full transition-transform duration-500 ease-out-expo group-hover:scale-y-100" style={{ background: `hsl(${tone})` }} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <StatusChip value={run.status} />
+                        <span className="font-mono text-[11px] text-muted-foreground">{run.id.slice(0, 8)}</span>
+                      </div>
+                      <div className="mt-2 truncate font-mono text-sm text-foreground" dir="ltr">{run.environment.targetUrl}</div>
+                      <div className="mt-1.5 flex flex-wrap items-center gap-3 font-mono text-[10.5px] uppercase tracking-wider text-muted-foreground">
+                        <span>{run.scanMode}</span>
+                        {scope.maxPages ? <span>{scope.maxPages} {copy.pagesUnit}</span> : null}
+                        {scope.concurrency ? <span>{scope.concurrency} concurrency</span> : null}
+                      </div>
                     </div>
-                    <span className="rounded-md bg-secondary px-2 py-1 text-xs font-semibold text-secondary-foreground">{run.status}</span>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {['FAILED', 'CANCELED', 'TIMED_OUT'].includes(run.status) ? (
+                        <form action={resumeSelectedRunAction}>
+                          <button className="btn-ghost h-7 px-2.5 text-xs">
+                            <RotateCcw className="h-3 w-3" />
+                            {copy.retry}
+                          </button>
+                        </form>
+                      ) : null}
+                      <RunStopButton runId={run.id} status={run.status} size="sm" />
+                      <Link className="btn-ghost h-7 px-2.5 text-xs" href={dashboardUrl('/results', { runId: run.id }, searchParams)}>
+                        {copy.viewDetails}
+                        <ArrowUpRight className="h-3 w-3 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                      </Link>
+                    </div>
                   </div>
-                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                    <span>{run.scanMode}</span>
-                    {scope.maxPages ? <span>{scope.maxPages} pages</span> : null}
-                    {scope.concurrency ? <span>{scope.concurrency} concurrency</span> : null}
-                  </div>
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    <Link className="rounded-md border border-border px-3 py-1.5 text-xs" href={dashboardUrl('/results', { runId: run.id }, searchParams)}>
-                      {copy.viewDetails}
-                    </Link>
-                    {['FAILED', 'CANCELED', 'TIMED_OUT'].includes(run.status) ? (
-                      <form action={resumeSelectedRunAction}>
-                        <button className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs">
-                          <RotateCcw className="h-3 w-3" />
-                          Retry
-                        </button>
-                      </form>
-                    ) : null}
-                    <RunStopButton runId={run.id} status={run.status} size="sm" />
-                  </div>
-                </div>
+                </RevealItem>
               );
             })
           )}
         </div>
-      </div>
+      </Reveal>
 
-      <div className="rounded-md border border-border bg-card p-5">
-        <h2 className="text-lg font-semibold">{copy.savedProfiles}</h2>
-        <p className="mt-1 text-sm text-muted-foreground">{copy.savedProfilesBody}</p>
-        <div className="mt-4 space-y-3">
+      <Reveal className="panel overflow-hidden" delay={0.08}>
+        <div className="border-b border-border px-5 py-4 md:px-6">
+          <h2 className="flex items-center gap-3 text-lg font-semibold tracking-tight">
+            {copy.savedProfiles}
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">{copy.savedProfilesBody}</p>
+        </div>
+        <div className="space-y-2 p-4 md:p-5">
           {profiles.length === 0 ? (
-            <p className="text-sm text-muted-foreground">{copy.noProfiles}</p>
+            <p className="py-8 text-center text-sm text-muted-foreground">{copy.noProfiles}</p>
           ) : (
             profiles.map((profile) => {
               const config = readProfileConfig(profile.config);
               const duplicateSelectedProfileAction = duplicateTestProfileAction.bind(null, profile.id);
               return (
-                <div key={profile.id} className="rounded-md border border-border bg-background p-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <div className="text-sm font-semibold">{profile.name}</div>
-                      <div className="mt-1 text-xs text-muted-foreground">
-                        {config.targetUrl ?? 'No target stored'} · {config.scanMode ?? 'STANDARD'}
+                <RevealItem key={profile.id}>
+                  <div className="panel-inset group p-4 transition-colors hover:border-primary/40">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <div className="truncate text-sm font-semibold">{profile.name}</div>
+                        <div className="mt-1 truncate font-mono text-[11px] text-muted-foreground" dir="ltr">
+                          {config.targetUrl ?? 'No target stored'} · {config.scanMode ?? 'STANDARD'}
+                        </div>
                       </div>
+                      {publicDemo ? null : (
+                        <form action={duplicateSelectedProfileAction}>
+                          <button className="btn-ghost h-7 px-2.5 text-xs">
+                            <Copy className="h-3 w-3" />
+                            {copy.duplicate}
+                          </button>
+                        </form>
+                      )}
                     </div>
-                    {publicDemo ? null : (
-                      <form action={duplicateSelectedProfileAction}>
-                        <button className="inline-flex items-center gap-1 rounded-md border border-border px-3 py-1.5 text-xs">
-                          <Copy className="h-3 w-3" />
-                          {copy.duplicate}
-                        </button>
-                      </form>
-                    )}
+                    <div className="mt-3 flex flex-wrap gap-1">
+                      {(config.checks ?? []).slice(0, 6).map((check) => (
+                        <span key={check} className="rounded border border-border px-1.5 py-0.5 font-mono text-[10px] text-muted-foreground">{check}</span>
+                      ))}
+                      {(config.checks ?? []).length === 0 ? <span className="text-xs text-muted-foreground">No checks stored</span> : null}
+                    </div>
+                    <Link className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-primary" href={dashboardUrl('/Run%20Center', { profileId: profile.id }, searchParams)}>
+                      {copy.useProfile}
+                      <ArrowUpRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+                    </Link>
                   </div>
-                  <div className="mt-2 text-xs text-muted-foreground">
-                    {(config.checks ?? []).slice(0, 6).join(', ') || 'No checks stored'}
-                  </div>
-                  <Link className="mt-3 inline-block rounded-md border border-border px-3 py-1.5 text-xs" href={dashboardUrl('/Run%20Center', { profileId: profile.id }, searchParams)}>
-                    Use profile
-                  </Link>
-                </div>
+                </RevealItem>
               );
             })
           )}
         </div>
-      </div>
+      </Reveal>
     </section>
   );
 }

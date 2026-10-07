@@ -84,6 +84,35 @@ export type DashboardCopy = {
   auditTrail: string;
   noMetrics: string;
   noAuditEvents: string;
+  readoutProtocol: string;
+  readoutHost: string;
+  readoutPath: string;
+  scopeStatus: string;
+  scopeIdle: string;
+  scopeLocked: string;
+  launching: string;
+  limitsTitle: string;
+  checksTitle: string;
+  checksSelectedHint: string;
+  standardHint: string;
+  deepHint: string;
+  customHint: string;
+  launchNote: string;
+  stop: string;
+  retry: string;
+  useProfile: string;
+  pagesUnit: string;
+  liveProgress: string;
+  technicalDetails: string;
+  suggestedFix: string;
+  evidence: string;
+  issueCount: string;
+  noIssuesInCategory: string;
+  sectionOverview: string;
+  sectionLive: string;
+  sectionLogs: string;
+  sectionIssues: string;
+  sectionMetrics: string;
 };
 
 const english: DashboardCopy = {
@@ -169,7 +198,36 @@ const english: DashboardCopy = {
   metrics: 'Run metrics',
   auditTrail: 'Audit trail',
   noMetrics: 'No metrics recorded yet.',
-  noAuditEvents: 'No audit events yet.'
+  noAuditEvents: 'No audit events yet.',
+  readoutProtocol: 'Protocol',
+  readoutHost: 'Host',
+  readoutPath: 'Path',
+  scopeStatus: 'Scope',
+  scopeIdle: 'searching',
+  scopeLocked: 'target locked',
+  launching: 'Launching scan',
+  limitsTitle: 'Scan limits',
+  checksTitle: 'Checks to run',
+  checksSelectedHint: 'Every available check is on by default. Turn off what you do not need.',
+  standardHint: 'balanced',
+  deepHint: 'thorough',
+  customHint: 'your rules',
+  launchNote: 'The scan runs in a real Chromium browser. Progress streams in below.',
+  stop: 'Stop',
+  retry: 'Retry',
+  useProfile: 'Use profile',
+  pagesUnit: 'pages',
+  liveProgress: 'Live run progress',
+  technicalDetails: 'Technical details',
+  suggestedFix: 'Suggested fix',
+  evidence: 'Evidence',
+  issueCount: 'issues',
+  noIssuesInCategory: 'Clear',
+  sectionOverview: 'Overview',
+  sectionLive: 'Live progress',
+  sectionLogs: 'Logs',
+  sectionIssues: 'Issues',
+  sectionMetrics: 'Metrics'
 };
 
 const arabic: DashboardCopy = {
@@ -256,7 +314,36 @@ const arabic: DashboardCopy = {
   metrics: 'مؤشرات الفحص',
   auditTrail: 'سجل العمليات',
   noMetrics: 'لا توجد مؤشرات مسجلة بعد.',
-  noAuditEvents: 'لا توجد أحداث تدقيق بعد.'
+  noAuditEvents: 'لا توجد أحداث تدقيق بعد.',
+  readoutProtocol: 'البروتوكول',
+  readoutHost: 'المضيف',
+  readoutPath: 'المسار',
+  scopeStatus: 'المنظار',
+  scopeIdle: 'يبحث',
+  scopeLocked: 'تم تحديد الهدف',
+  launching: 'جاري بدء الفحص',
+  limitsTitle: 'حدود الفحص',
+  checksTitle: 'الفحوصات المطلوبة',
+  checksSelectedHint: 'كل الفحوصات المتاحة مفعلة افتراضياً. أطفئ ما لا تحتاجه.',
+  standardHint: 'متوازن',
+  deepHint: 'شامل',
+  customHint: 'قواعدك',
+  launchNote: 'يعمل الفحص داخل متصفح Chromium حقيقي، ويظهر التقدم مباشرة في الأسفل.',
+  stop: 'إيقاف',
+  retry: 'إعادة',
+  useProfile: 'استخدام القالب',
+  pagesUnit: 'صفحات',
+  liveProgress: 'تقدم الفحص المباشر',
+  technicalDetails: 'التفاصيل التقنية',
+  suggestedFix: 'الحل المقترح',
+  evidence: 'الدليل',
+  issueCount: 'مشاكل',
+  noIssuesInCategory: 'سليم',
+  sectionOverview: 'نظرة عامة',
+  sectionLive: 'التقدم المباشر',
+  sectionLogs: 'السجلات',
+  sectionIssues: 'المشاكل',
+  sectionMetrics: 'المؤشرات'
 };
 
 export function getDashboardCopy(locale: string | undefined): DashboardCopy {
